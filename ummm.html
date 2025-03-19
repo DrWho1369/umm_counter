@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ummmmm Counter</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            font-size: 3rem;
+        }
+        #counter {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #ff4500;
+            text-shadow: 0px 0px 10px rgba(255, 69, 0, 0.8);
+            transition: transform 0.2s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .counter-animate {
+            animation: pulse 0.3s ease-in-out;
+        }
+
+        #speed {
+            font-size: 1.5rem;
+            color: #666;
+        }
+        #umm-meter {
+            width: 80%;
+            height: 20px;
+            background: #ddd;
+            margin: 10px auto;
+            position: relative;
+            border-radius: 10px;
+        }
+        #umm-progress {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff4500, #ffcc00);
+            border-radius: 10px;
+            transition: width 0.5s ease-in-out;
+            box-shadow: 0px 0px 10px rgba(255, 69, 0, 0.5);
+        }
+
+        .btn {
+            font-size: 2rem;
+            padding: 15px 30px;
+            background-color: #ff6347;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 5px #b53121;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .btn:hover {
+            background-color: #e5533d;
+            transform: scale(1.1);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px #b53121;
+        }
+
+        .dark-mode {
+            background-color: #222;
+            color: white;
+            transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        .dark-mode .btn {
+            background-color: #444;
+            color: #ddd;
+            box-shadow: none;
+        }
+
+        .dark-mode .btn:hover {
+            background-color: #666;
+        }
+
+        .dark-mode #counter {
+            color: #ffcc00;
+            text-shadow: 0px 0px 10px rgba(255, 204, 0, 0.8);
+        }
+
+        .speech {
+            position: absolute;
+            background: #ffeb3b;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.2s ease-in-out;
+            transform: scale(0.8);
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .speech::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #ffeb3b;
+        }
+
+        .speech-animate {
+            opacity: 1 !important;
+            transform: scale(1);
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: red;
+            top: 0;
+            left: 50%;
+            animation: confetti 3s ease-in-out forwards;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Ummmmm Counter</h1>
+    <p>Track how many times the manager says "Ummmmm" in a meeting!</p>
+    <div id="counter">0</div>
+    <div id="speed">Speed: 0 UPM</div>
+    <div id="umm-meter">
+        <div id="umm-progress"></div>
+    </div>
+    <button class="btn" onclick="incrementCounter()">Ummmmm</button>
+    <button class="btn" style="background-color: gray;" onclick="resetCounter()">Reset</button>
+    <button class="btn" style="background-color: black;" onclick="toggleDarkMode()">Serious Mode</button>
+
+ 
+    <audio id="umSound" src="ummm.mp3"></audio>
+    
+    <script>
+        let count = 0;
+        let startTime = null;
+        let lastClickTime = 0;
+        let streakTimeout;
+        const roasts = [
+            "This meeting is 90% Ummmmm!", 
+            "Can we get to the point, please?", 
+            "Ummm... we're running out of time!", 
+            "Just say it already!", 
+            "We need an Ummmmm tax!"
+        ];
+
+        function incrementCounter() {
+            count++;
+            document.getElementById("counter").innerText = count;
+            document.getElementById("counter").classList.add("counter-animate");
+
+            setTimeout(() => {
+                document.getElementById("counter").classList.remove("counter-animate");
+            }, 300);
+            document.getElementById("umSound").play();
+            showSpeechBubble();
+            updateMeter();
+            if (!startTime) {
+                startTime = Date.now();
+            }
+            updateSpeed();
+            
+            let currentTime = Date.now();
+            if (currentTime - lastClickTime < 2000) {
+                clearTimeout(streakTimeout);
+                document.body.insertAdjacentHTML("beforeend", '<div id="streak" style="position: fixed; top: 10px; left: 50%; transform: translateX(-50%); font-size: 2rem; font-weight: bold; color: red;">🔥 She’s on fire! 🔥</div>');
+                streakTimeout = setTimeout(() => document.getElementById("streak").remove(), 2000);
+            }
+            lastClickTime = currentTime;
+            
+            if (count % 10 === 0) {
+                launchConfetti();
+                showRoast()
+            }
+            if (count === 25) {
+                alert("WARNING: Manager has exceeded safe Ummmmm limits! 🚨");
+            }
+        }
+
+        function resetCounter() {
+            count = 0;
+            startTime = null;
+            document.getElementById("counter").innerText = count;
+            document.getElementById("speed").innerText = "Speed: 0 UPM";
+        }
+
+        function updateSpeed() {
+            let elapsedMinutes = (Date.now() - startTime) / 60000;
+            let speed = (count / elapsedMinutes).toFixed(2);
+            document.getElementById("speed").innerText = `Speed: ${speed} UPM`;
+        }
+        function updateMeter() {
+            let progress = Math.min((count / 100) * 100, 100);
+            document.getElementById("umm-progress").style.width = progress + "%";
+        }
+
+        function showRoast() {
+            let roast = roasts[Math.floor(Math.random() * roasts.length)];
+            let roastDiv = document.createElement('div');
+            roastDiv.style.position = 'fixed';
+            roastDiv.style.bottom = '10px';
+            roastDiv.style.left = '50%';
+            roastDiv.style.transform = 'translateX(-50%)';
+            roastDiv.style.background = 'black';
+            roastDiv.style.color = 'white';
+            roastDiv.style.padding = '15px';
+            roastDiv.style.borderRadius = '10px';
+            roastDiv.style.fontSize = '1.2rem';
+            roastDiv.style.boxShadow = '0px 4px 6px rgba(0, 0, 0, 0.1)';
+            roastDiv.innerText = roast;
+            document.body.appendChild(roastDiv);
+            setTimeout(() => roastDiv.remove(), 3000);
+        }
+
+
+
+        function showSpeechBubble() {
+            let speech = document.createElement("div");
+            speech.className = "speech speech-animate";  // Add the animate class
+            speech.innerText = "Ummmmm...";
+            document.body.appendChild(speech);
+
+            let leftPos, topPos;
+            do {
+                leftPos = Math.random() * 80;
+            } while (leftPos > 35 && leftPos < 65);  // Avoids button area
+
+            do {
+                topPos = Math.random() * 60;
+            } while (topPos > 40 && topPos < 70);  // Avoids button area
+
+            speech.style.left = leftPos + "vw";
+            speech.style.top = topPos + "vh";
+
+            setTimeout(() => {
+                speech.style.opacity = "1"; // Smoothly fade in
+                speech.style.transform = "scale(1)"; // Scale up effect
+            }, 50);
+
+            setTimeout(() => {
+                speech.style.opacity = "0";
+                speech.style.transform = "scale(0.8)"; // Shrink effect on exit
+                setTimeout(() => speech.remove(), 300);
+            }, 1500);
+        }
+
+
+        function launchConfetti() {
+            for (let i = 0; i < 50; i++) {
+                let confetti = document.createElement("div");
+                confetti.classList.add("confetti");
+                confetti.style.left = Math.random() * 100 + "vw";
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDuration = (Math.random() * 2 + 1) + "s";
+                confetti.innerText = "Umm";
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+   
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+    </script>
+</body>
+</html>
